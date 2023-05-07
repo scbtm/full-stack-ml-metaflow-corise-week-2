@@ -11,10 +11,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 
 class NbowModel():
-    def __init__(self, vocab_sz:int = 735, hyperparams:dict = {'lr':0.002, 'epochs':10}):
+    def __init__(self, vocab_sz):
 
         self.vocab_sz = vocab_sz
-        self.hyperparams = hyperparams
+        
 
         # Instantiate the CountVectorizer
         self.cv = CountVectorizer(min_df=.005, max_df = .75, 
@@ -32,24 +32,22 @@ class NbowModel():
 
         predictions = layers.Dense(1, activation = "sigmoid",)(x)
         self.model = tf.keras.Model(inputs, predictions)
-        opt = optimizers.Adam(learning_rate=self.hyperparams['lr'])
+        opt = optimizers.Adam(learning_rate=0.002)
         self.model.compile(loss="binary_crossentropy", 
                            optimizer=opt, 
                            metrics=["accuracy"])
 
     def fit(self, X, y):
         print(X.shape)
-        print(X[0])
         res = self.cv.fit_transform(X).toarray()
         self.model.fit(x=res, 
                        y=y, 
                        batch_size=32, 
-                       epochs = self.hyperparams['epochs'], 
+                       epochs = 10, 
                        validation_split=.2)
     
     def predict(self, X):
         print(X.shape)
-        print(X[0])
         res = self.cv.transform(X).toarray()
         return self.model.predict(res)
     

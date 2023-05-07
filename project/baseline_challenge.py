@@ -4,7 +4,6 @@ from metaflow import FlowSpec, step, Flow, current, Parameter, IncludeFile, card
 from metaflow.cards import Table, Markdown, Artifact, Image
 import numpy as np 
 from dataclasses import dataclass
-import pathlib
 import pandas as pd
 
 labeling_function = lambda x: 1 if x > 4 else 0 # TODO: Define your labeling function here.
@@ -21,7 +20,7 @@ class ModelResult:
 class BaselineChallenge(FlowSpec):
 
     split_size = Parameter('split-sz', default=0.2)
-    data = IncludeFile('data', default='womens_clothing_e_commerce_reviews.csv')
+    data = IncludeFile('data', default='./data/womens_clothing_e_commerce_reviews.csv')
     kfold = Parameter('k', default=5)
     scoring = Parameter('scoring', default='accuracy')
 
@@ -33,7 +32,7 @@ class BaselineChallenge(FlowSpec):
         from sklearn.model_selection import train_test_split        
         # load dataset packaged with the flow.
         # this technique is convenient when working with small datasets that need to move to remove tasks.
-        df = pd.read_csv(data, index_col=0) # TODO: load the data. 
+        df = pd.read_csv(io.StringIO(self.data), index_col = 0) # TODO: load the data. 
         # Look up a few lines to the IncludeFile('data', default='Womens Clothing E-Commerce Reviews.csv'). 
         # You can find documentation on IncludeFile here: https://docs.metaflow.org/scaling/data#data-in-local-files
 
@@ -44,7 +43,7 @@ class BaselineChallenge(FlowSpec):
         df['review'] = df['review_text'].astype('str')
         _has_review_df = df[df['review_text'] != 'nan']
         reviews = _has_review_df['review_text']
-        labels = _has_review_df.apply(labeling_function, axis=1)
+        labels = _has_review_df['rating'].apply(labeling_function)
         self.df = pd.DataFrame({'label': labels, **_has_review_df})
 
         # split the data 80/20, or by using the flow's split-sz CLI argument
@@ -145,7 +144,7 @@ class BaselineChallenge(FlowSpec):
 
         # TODO: Add a Table of the results to your card! 
         current.card.append(
-            Table(self.results, # TODO: What goes here to populate the Table in the card? 
+            Table(rows, # TODO: What goes here to populate the Table in the card? 
                   headers=["Model name", "Params", "Task pathspec", "Accuracy", "ROCAUC"]
                   )
             )
